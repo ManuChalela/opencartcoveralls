@@ -1,39 +1,52 @@
 language: php
-php:
-- 5.4
+matrix:
+    include:
+        - php: 5.5
+          env: 'COMPOSER_FLAGS="--prefer-stable --prefer-lowest"'
+        - php: 5.5
+          env: 'BOX=yes'
+        - php: 5.6
+        - php: 7.0
+       # - php: 7.1
+          env: CHECKS=yes
+       # - php: hhvm
 
+dist: trusty
 sudo: false
 
 install:
-- travis_retry composer install --no-interaction
-
-addons:
-  sonarqube:
-    organization: "testingucu2017-github"
-    token:
-      secure: "3a62d805f9521d93899e87be247d253c1fcb3107"
+- travis_retry composer self-update
+- travis_retry composer install --no-interaction --prefer-source --dev
+- mkdir -p build/logs
+- mv ${HOME}/.phpenv/versions/$(phpenv version-name)/etc/conf.d/xdebug.ini ${HOME}/xdebug.ini || return 0
 
 script:
-- find admin catalog tests -name *.php | xargs -n 1 -P4 php -l
-- phpunit -c tests/phpunit/phpunit.xml
-- sonar-scanner
-- php vendor/codeception/codeception/codecept run api
+    - cp ${HOME}/xdebug.ini ${HOME}/.phpenv/versions/$(phpenv version-name)/etc/conf.d/xdebug.ini || return 0
+    #- phpunit -v
+    - rm ${HOME}/.phpenv/versions/$(phpenv version-name)/etc/conf.d/xdebug.ini || return 0
+    - if [ "$CHECKS" = "yes" ]; then composer sca; fi;
 
-# Las credenciales fueron agregadas directamente en Travis CI -> Settings
+after_success:
+    - bin/coveralls -v --exclude-no-stmt
+
+before_deploy:
+    - if [ "${BOX}" = "yes" ]; then curl -LSs http://box-project.github.io/box2/installer.php | php; fi;
+    - if [ "${BOX}" = "yes" ]; then composer update --no-dev --no-interaction ${COMPOSER_FLAGS}; fi;
+    - if [ "${BOX}" = "yes" ]; then php -d phar.readonly=false box.phar build; fi;
+
 deploy:
-  provider: azure_web_apps
-  
-
-
-notifications:
-  slack:
-    on_success: always
-  email:
-    recipients:
-      - TestingUcu2017@gmail.com      
-    on_success: never  # default: change
-    on_failure: always # default: always
-
+    provider: releases
+    api_key:
+        #secure: EH3xkaLCQIK4YToB4pFHz4L9Uhjh1eG5tG2i94OP6R3KVfmC3fugSTQSchKwlkJYdTl/Uj7Px0YUr0H0FeCvmi4lVai/NEM2PGthv6s6bO69MmivKhjkceqgcuDSDHsu/eNb0+4VC6jC7g6vGfTeKNUj17QQgLyFyG1kFN5xqbM=
+        secure: pSCebGTXVYw4LWFAbQvxOUecJ2OabdwRZ
+    file: build/artifacts/coveralls.phar
+    skip_cleanup: true
+    on:
+        #repo: satooshi/php-coveralls
+        repo: giaquinta29/testing2017
+        tags: true
+        all_branches: true
+        condition: $BOX = yes
 
 
 
