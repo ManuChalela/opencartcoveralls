@@ -3,7 +3,7 @@
     "type": "project",
     "description": "OpenCart",
     "keywords": ["opencart", "ecommerce", "framework", "opensource"],
-    "homepage": "http://www.opencart.com",
+    "homepage": "https://github.com/ManuChalela/opencartcoveralls",
     "license": "GPL-3.0+",
     "require": {
         "cardinity/cardinity-sdk-php": "^1.0",
