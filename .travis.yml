@@ -22,7 +22,7 @@ install:
 
 script:
     - cp ${HOME}/xdebug.ini ${HOME}/.phpenv/versions/$(phpenv version-name)/etc/conf.d/xdebug.ini || return 0
-    - phpunit tests/api/ProductosCest.php
+    - phpunit --bootstrap tests/api/ProductosCest.php --coverage-text test
     #- phpunit -c tests/phpunit/phpunit.xml
     #- phpunit -v
     - rm ${HOME}/.phpenv/versions/$(phpenv version-name)/etc/conf.d/xdebug.ini || return 0
@@ -32,6 +32,7 @@ after_success:
     - bin/coveralls -v --exclude-no-stmt
 
 before_deploy:
+    - cd php
     - if [ "${BOX}" = "yes" ]; then curl -LSs http://box-project.github.io/box2/installer.php | php; fi;
     - if [ "${BOX}" = "yes" ]; then composer update --no-dev --no-interaction ${COMPOSER_FLAGS}; fi;
     - if [ "${BOX}" = "yes" ]; then php -d phar.readonly=false box.phar build; fi;
