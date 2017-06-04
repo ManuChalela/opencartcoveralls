@@ -21,6 +21,8 @@ install:
 - mv ${HOME}/.phpenv/versions/$(phpenv version-name)/etc/conf.d/xdebug.ini ${HOME}/xdebug.ini || return 0
 
 script:
+    - vendor/bin/coveralls
+    - vendor/bin/phpunit
     - cp ${HOME}/xdebug.ini ${HOME}/.phpenv/versions/$(phpenv version-name)/etc/conf.d/xdebug.ini || return 0
     - phpunit --bootstrap tests/api/ProductosCest.php --coverage-text test
     #- phpunit -c tests/phpunit/phpunit.xml
@@ -32,6 +34,7 @@ after_success:
     - bin/coveralls -v --exclude-no-stmt
 
 before_deploy:
+    - composer require atoum/atoum
     - cd php
     - if [ "${BOX}" = "yes" ]; then curl -LSs http://box-project.github.io/box2/installer.php | php; fi;
     - if [ "${BOX}" = "yes" ]; then composer update --no-dev --no-interaction ${COMPOSER_FLAGS}; fi;
